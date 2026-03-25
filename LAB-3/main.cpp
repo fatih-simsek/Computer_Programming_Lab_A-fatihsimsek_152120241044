@@ -1,48 +1,180 @@
 #include <iostream>
+#include <string>
 using namespace std;
 
-int main() {
-    int secim;
-    int biletSayisi;
-    double fiyat = 0;
-    double toplam;
 
-    cout << "===== SINEMA MENU =====" << endl;
-    cout << "1. Aksiyon Filmi (100 TL)" << endl;
-    cout << "2. Komedi Filmi (80 TL)" << endl;
-    cout << "3. Dram Filmi (90 TL)" << endl;
-    cout << "4. Cikis" << endl;
+struct Page {
+    string url;
+    string title;
+    int accessTime[3]; 
+    Page* next;
+    Page* prev;
+};
 
-    cout << "Seciminizi yapiniz: ";
-    cin >> secim;
+Page* head = NULL;
+Page* current = NULL;
 
-    switch(secim) {
-        case 1:
-            fiyat = 100;
-            cout << "Aksiyon filmi sectiniz." << endl;
-            break;
-        case 2:
-            fiyat = 80;
-            cout << "Komedi filmi sectiniz." << endl;
-            break;
-        case 3:
-            fiyat = 90;
-            cout << "Dram filmi sectiniz." << endl;
-            break;
-        case 4:
-            cout << "Cikis yapiliyor..." << endl;
-            return 0;
-        default:
-            cout << "Gecersiz secim!" << endl;
-            return 0;
+
+Page* createPage(string url, string title, int h, int m, int s) {
+    Page* newPage = new Page;
+    newPage->url = url;
+    newPage->title = title;
+    newPage->accessTime[0] = h;
+    newPage->accessTime[1] = m;
+    newPage->accessTime[2] = s;
+    newPage->next = NULL;
+    newPage->prev = NULL;
+    return newPage;
+}
+
+
+void visit(string url, string title, int h, int m, int s) {
+    Page* newPage = createPage(url, title, h, m, s);
+
+    if (head == NULL) {
+        head = newPage;
+        current = newPage;
+    } else {
+        current->next = newPage;
+        newPage->prev = current;
+        current = newPage;
+    }
+}
+
+
+void goBack() {
+    if (current != NULL && current->prev != NULL) {
+        current = current->prev;
+    } else {
+        cout << "No previous page!\n";
+    }
+}
+
+
+void goForward() {
+    if (current != NULL && current->next != NULL) {
+        current = current->next;
+    } else {
+        cout << "No next page!\n";
+    }
+}
+
+
+void deleteCurrent() {
+    if (current == NULL) return;
+
+    Page* temp = current;
+
+    
+    if (current == head) {
+        head = current->next;
+        if (head != NULL) head->prev = NULL;
+        current = head;
+    }
+    else {
+        if (current->prev != NULL)
+            current->prev->next = current->next;
+
+        if (current->next != NULL)
+            current->next->prev = current->prev;
+
+     
+        if (current->next != NULL)
+            current = current->next;
+        else
+            current = current->prev;
     }
 
-    cout << "Kac bilet almak istiyorsunuz? ";
-    cin >> biletSayisi;
+    delete temp;
+}
 
-    toplam = fiyat * biletSayisi;
 
-    cout << "Toplam tutar: " << toplam << " TL" << endl;
+void displayHistory() {
+    if (head == NULL) {
+        cout << "History is empty!\n";
+        return;
+    }
+
+    Page* temp = head;
+
+    while (temp != NULL) {
+        if (temp == current)
+            cout << ">> CURRENT PAGE <<\n";
+
+        cout << "URL: " << temp->url << endl;
+        cout << "Title: " << temp->title << endl;
+
+        cout << "Time: ";
+        for (int i = 0; i < 3; i++) {
+            cout << temp->accessTime[i];
+            if (i < 2) cout << ":";
+        }
+        cout << endl;
+
+        cout << "----------------------\n";
+        temp = temp->next;
+    }
+}
+
+
+void clearHistory() {
+    Page* temp = head;
+    while (temp != NULL) {
+        Page* nextNode = temp->next;
+        delete temp;
+        temp = nextNode;
+    }
+    head = NULL;
+    current = NULL;
+}
+
+
+int main() {
+    int choice;
+    string url, title;
+    int h, m, s;
+
+    do {
+        cout << "\n1. Visit Page\n2. Back\n3. Forward\n4. Delete Current\n5. Display History\n6. EXIT\nChoice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter URL: ";
+                cin >> url;
+                cout << "Enter Title: ";
+                cin >> title;
+                cout << "Enter Time (h m s): ";
+                cin >> h >> m >> s;
+                visit(url, title, h, m, s);
+                break;
+
+            case 2:
+                goBack();
+                break;
+
+            case 3:
+                goForward();
+                break;
+
+            case 4:
+                deleteCurrent();
+                break;
+
+            case 5:
+                displayHistory();
+                break;
+
+            case 6:
+                clearHistory();
+                cout << "Memory cleaned. Exiting...\n";
+                break;
+
+            default:
+                cout << "Invalid choice!\n";
+        }
+
+    } while (choice != 6);
 
     return 0;
 }
